@@ -68,7 +68,7 @@ variable "cluster_endpoint_public_access" {
 }
 
 variable "public_access_cidrs" {
-  description = "CIDRs allowed to reach the public EKS endpoint (lock IP in production)"
+  description = "CIDRs allowed to reach the public EKS endpoint (lock to your IP in production)"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
