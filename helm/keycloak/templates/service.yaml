@@ -1,0 +1,47 @@
+################################################################################
+# Main Service — routes traffic to active slot (blue or green)
+# To switch slots in blue-green: update the "slot" selector
+################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "keycloak.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    slot: {{ .Values.slot }}   # This is the blue-green traffic switch
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+
+---
+################################################################################
+# Headless Service — for Infinispan/JGroups cluster peer discovery
+################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "keycloak.fullname" . }}-headless
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: {{ include "keycloak.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: jgroups
+      port: 7600
+      targetPort: 7600

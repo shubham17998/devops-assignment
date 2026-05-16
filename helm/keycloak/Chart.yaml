@@ -1,0 +1,18 @@
+apiVersion: v2
+name: keycloak
+description: |
+  Helm chart for Keycloak with PostgreSQL backend, External Secrets integration, blue-green deployments, and AWS ALB ingress configuration
+type: application
+version: 1.0.0
+appVersion: "24.0.4"
+
+maintainers:
+  - name: platform-team
+
+keywords:
+  - keycloak
+  - iam
+  - auth
+  - identity
+
+dependencies: []

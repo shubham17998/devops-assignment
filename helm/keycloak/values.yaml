@@ -1,0 +1,188 @@
+# Keycloak Helm Chart
+
+# -- Deployment slot: "blue" or "green" (blue-green strategy)
+slot: blue
+
+keycloak:
+  image:
+    repository: quay.io/keycloak/keycloak
+    tag: "24.0.4"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 2
+
+  adminSecretName: keycloak-admin-secret
+
+  # Keycloak startup arguments
+  args:
+    - "start"
+    - "--optimized"
+
+  # Environment variables for Keycloak
+  env:
+    KC_HTTP_ENABLED: "true"
+    KC_HOSTNAME_STRICT: "false"
+    KC_PROXY: "edge"
+    KC_CACHE: "ispn"
+    KC_CACHE_STACK: "kubernetes"
+    KC_HEALTH_ENABLED: "true"
+    KC_METRICS_ENABLED: "true"
+    KC_LOG_LEVEL: "INFO"
+    jgroups.dns.query: "keycloak-headless.keycloak.svc.cluster.local"
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  # Horizontal Pod Autoscaler
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  livenessProbe:
+    httpGet:
+      path: /health/live
+      port: 8080
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health/ready
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+  startupProbe:
+    httpGet:
+      path: /health/started
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 30
+
+  # Pod affinity spread across AZs
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: keycloak
+
+  # Pod security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  podAnnotations: {}
+
+# PostgreSQL
+
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  # DB credentials from External Secret
+  secretName: keycloak-db-secret
+
+  database: keycloak
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+  persistence:
+    enabled: true
+    storageClass: "gp3"
+    size: 20Gi
+    accessMode: ReadWriteOnce
+
+# Storage Class
+
+storageClass:
+  create: true
+  name: gp3
+  provisioner: ebs.csi.aws.com
+  parameters:
+    type: gp3
+    encrypted: "true"
+  reclaimPolicy: Retain
+  allowVolumeExpansion: true
+
+# Service
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# Ingress
+
+ingress:
+  enabled: true
+  className: alb
+  hostname: "auth.example.com"    # Override via --set or tfvars
+  certificateArn: ""              # Override with your ACM ARN
+
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}, {"HTTP": 80}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/healthcheck-path: /health/ready
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+    # Blue-green: traffic goes to "blue" target group by default
+    alb.ingress.kubernetes.io/target-group-attributes: "stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400"
+
+# External Secrets (pulls from AWS Secrets Manager)
+
+externalSecrets:
+  enabled: true
+  refreshInterval: "1h"
+  awsRegion: "ap-south-1"     # Override via Terraform templatefile
+
+  keycloakAdmin:
+    secretStoreName: aws-secrets-manager
+    remoteSecretName: ""     # Populated by Terraform template
+
+  keycloakDb:
+    secretStoreName: aws-secrets-manager
+    remoteSecretName: ""     # Populated by Terraform template
+
+# Service Monitor (for Prometheus if installed)
+
+serviceMonitor:
+  enabled: false
+  interval: "30s"
+  scrapeTimeout: "10s"
+
+serviceAccount:
+  create: true
+  name: ""
