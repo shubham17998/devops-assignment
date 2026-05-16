@@ -2,23 +2,6 @@
 
 > Terraform/OpenTofu projects provisioning a production-ready network and Kubernetes platform on AWS, with Keycloak deployed via a custom Helm chart.
 
----
-
-## Table of Contents
-
-1. [Architecture Overview](#architecture-overview)
-2. [Repository Structure](#repository-structure)
-3. [Design Decisions](#design-decisions)
-4. [Assumptions](#assumptions)
-5. [Prerequisites](#prerequisites)
-6. [Setup Instructions](#setup-instructions)
-7. [Blue-Green Deployment](#blue-green-deployment)
-8. [Observability](#observability)
-9. [Secrets Management](#secrets-management)
-10. [Cleanup](#cleanup)
-
----
-
 ## Architecture Overview
 
 ```
