@@ -324,10 +324,3 @@ terraform destroy \
 aws s3 rb s3://my-terraform-state-bucket-sample1 --force
 aws dynamodb delete-table --table-name terraform-state-locks
 ```
-
-> **Note:** Secrets Manager secrets have a 7-day recovery window. To force immediate deletion:
-> ```bash
-> aws secretsmanager delete-secret \
->   --secret-id devops-assignment-prod/keycloak/admin \
->   --force-delete-without-recovery
-> ```
