@@ -23,7 +23,7 @@ variable "owner" {
 }
 
 variable "cluster_name" {
-  description = "EKS cluster name used for subnet discovery tags"
+  description = "EKS cluster name — used for subnet discovery tags"
   type        = string
   default     = "devops-assignment-prod"
 }
