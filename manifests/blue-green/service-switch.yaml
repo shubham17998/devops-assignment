@@ -1,0 +1,42 @@
+# Blue-Green Deployment Strategy
+#
+# Deployment flow:
+#
+#   Step 1: Deploy new version on green
+#      helm upgrade --install keycloak-green ./helm/keycloak \
+#        --namespace keycloak \
+#        --set slot=green \
+#        --set keycloak.image.tag=NEW_VERSION
+#
+#   Step 2: Check green pods are healthy
+#      kubectl rollout status deployment/keycloak-green -n keycloak
+#
+#   Step 3: Move traffic from blue to green
+#      helm upgrade keycloak ./helm/keycloak --set slot=green
+#
+#   Step 4: After validation remove old blue release
+#      helm uninstall keycloak-blue -n keycloak
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-active
+  namespace: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    managed-by: manual-blue-green
+  annotations:
+    # Document which slot is currently active
+    deployment.kubernetes.io/active-slot: "blue"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/instance: keycloak
+    slot: blue    # <<< Change to "green" to switch traffic
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
