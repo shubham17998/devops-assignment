@@ -96,18 +96,6 @@ One NAT Gateway per availability zone ensures that private workloads survive an 
 
 ---
 
-## Prerequisites
-
-```bash
-# Required tools
-terraform version  # >= 1.6.0
-aws --version      # >= 2.0
-kubectl version    # >= 1.28
-helm version       # >= 3.12
-```
-
----
-
 ## Setup Instructions
 
 ### Step 0 — Bootstrap Terraform State Backend (once)
@@ -305,7 +293,7 @@ aws secretsmanager get-secret-value \
 
 ## Cleanup
 
-**Important:** Always destroy Project 2 before Project 1. Network resources cannot be deleted while cluster resources depend on them.
+Destroy Project 2 before Project 1. Network resources cannot be deleted while cluster resources depend on them.
 
 ```bash
 # Step 1: Destroy Kubernetes workloads (Project 2)
