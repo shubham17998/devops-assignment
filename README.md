@@ -1,6 +1,6 @@
 # DevOps Assignment — AWS EKS + Keycloak
 
-> Terraform/OpenTofu projects provisioning a production-ready network and Kubernetes platform on AWS, with Keycloak deployed via a custom Helm chart.
+Terraform projects provisioning a production-ready network and Kubernetes platform on AWS, with Keycloak deployed via a custom Helm chart.
 
 ## Architecture Overview
 
@@ -8,38 +8,38 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                         AWS Account                             │
 │                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │                    VPC (10.0.0.0/16)                     │  │
-│  │                                                          │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │  │
-│  │  │ Public AZ-a  │  │ Public AZ-b  │  │ Public AZ-c  │  │  │
-│  │  │ 10.0.1.0/24  │  │ 10.0.2.0/24  │  │ 10.0.3.0/24  │  │  │
-│  │  │  [NAT GW]    │  │  [NAT GW]    │  │  [NAT GW]    │  │  │
-│  │  │  [ALB]       │  │  [ALB]       │  │  [ALB]       │  │  │
-│  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │  │
-│  │         │                 │                  │           │  │
-│  │  ┌──────▼───────┐  ┌──────▼───────┐  ┌──────▼───────┐  │  │
-│  │  │ Private AZ-a │  │ Private AZ-b │  │ Private AZ-c │  │  │
-│  │  │ 10.0.11.0/24 │  │ 10.0.12.0/24 │  │ 10.0.13.0/24 │  │  │
-│  │  │ [EKS Nodes]  │  │ [EKS Nodes]  │  │ [EKS Nodes]  │  │  │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘  │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    VPC (10.0.0.0/16)                     │   │
+│  │                                                          │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
+│  │  │ Public AZ-a  │  │ Public AZ-b  │  │ Public AZ-c  │    │   │
+│  │  │ 10.0.1.0/24  │  │ 10.0.2.0/24  │  │ 10.0.3.0/24  │    │   │
+│  │  │  [NAT GW]    │  │  [NAT GW]    │  │  [NAT GW]    │    │   │
+│  │  │  [ALB]       │  │  [ALB]       │  │  [ALB]       │    │   │
+│  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘    │   │
+│  │         │                 │                  │           │   │
+│  │  ┌──────▼───────┐  ┌──────▼───────┐  ┌──────▼───────┐    │   │
+│  │  │ Private AZ-a │  │ Private AZ-b │  │ Private AZ-c │    │   │
+│  │  │ 10.0.11.0/24 │  │ 10.0.12.0/24 │  │ 10.0.13.0/24 │    │   │
+│  │  │ [EKS Nodes]  │  │ [EKS Nodes]  │  │ [EKS Nodes]  │    │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
+│  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
-│  ┌──────────┐  ┌─────────────────┐  ┌───────────────────────┐  │
-│  │   EKS    │  │ Secrets Manager │  │    CloudWatch Logs    │  │
-│  │ Control  │  │ (Keycloak creds │  │ (Container Insights + │  │
-│  │  Plane   │  │  + DB creds)    │  │    Fluent Bit)        │  │
-│  └──────────┘  └─────────────────┘  └───────────────────────┘  │
+│  ┌──────────┐  ┌─────────────────┐  ┌───────────────────────┐   │
+│  │   EKS    │  │ Secrets Manager │  │    CloudWatch Logs    │   │
+│  │ Control  │  │ (Keycloak creds │  │ (Container Insights + │   │
+│  │  Plane   │  │  + DB creds)    │  │    Fluent Bit)        │   │
+│  └──────────┘  └─────────────────┘  └───────────────────────┘   │
 │                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                  EKS Cluster (keycloak ns)              │   │
-│  │                                                         │   │
-│  │   Internet → ALB → Keycloak Service → [blue|green]      │   │
-│  │                                    ↓                    │   │
-│  │                             PostgreSQL (StatefulSet)     │   │
-│  │                                    ↓                    │   │
-│  │                    External Secrets ← Secrets Manager    │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                  EKS Cluster (keycloak ns)              │    │
+│  │                                                         │    │
+│  │   Internet → ALB → Keycloak Service → [blue|green]      │    │
+│  │                                    ↓                    │    │
+│  │                             PostgreSQL (StatefulSet)    │   │
+│  │                                    ↓                    │    │
+│  │                    External Secrets ← Secrets Manager   │   │
+│  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ---
 
